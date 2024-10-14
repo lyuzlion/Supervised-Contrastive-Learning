@@ -8,18 +8,18 @@ from tqdm import tqdm
 from models.resnet import SupConResNet
 from utils.util import *
 from loss import SupConLoss
-
+import torch.backends.cudnn as cudnn
 
 def parse_option():
     parser = argparse.ArgumentParser('argument for training')
 
     parser.add_argument('--batch_size', type=int, default=256,
                         help='batch_size')
-    parser.add_argument('--epochs', type=int, default=20,
+    parser.add_argument('--epochs', type=int, default=200,
                         help='number of training epochs')
 
     # optimization
-    parser.add_argument('--learning_rate', type=float, default=0.05,
+    parser.add_argument('--learning_rate', type=float, default=0.07,
                         help='learning rate')
     parser.add_argument('--lr_decay_rate', type=float, default=0.9,
                         help='decay rate for learning rate')
@@ -80,7 +80,7 @@ def set_loader(opt):
 
     return train_loader
 
-def train(train_loader, model, criterion, optimizer, opt):
+def train(train_loader, model, criterion, optimizer):
     """one epoch training"""
     model.train()
     losses = AverageMeter()
@@ -121,17 +121,19 @@ def main():
     optimizer = optimizer = optim.SGD(model.parameters(), lr=opt.learning_rate, momentum=opt.momentum, weight_decay=opt.weight_decay)
     loss_min = np.inf
     
+    # model = torch.nn.DataParallel(model, device_ids=range(torch.cuda.device_count()))
+    # cudnn.benchmark = True
     model.train()
 
     for epoch in tqdm(range(1, opt.epochs + 1)):
-        loss = train(train_loader, model, criterion, optimizer, opt)
+        loss = train(train_loader, model, criterion, optimizer)
 
         if loss < loss_min:
             loss_min = loss
             save_file = os.path.join(opt.save_folder, 'ckpt_epoch_{}.pth'.format(epoch))
             save_model(model, optimizer, opt, epoch, save_file)
         
-        if epoch % 1 == 0:
+        if epoch % 10 == 0:
             adjust_learning_rate(opt, optimizer)
 
 
