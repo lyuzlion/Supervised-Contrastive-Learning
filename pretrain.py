@@ -8,14 +8,13 @@ from tqdm import tqdm
 from models.resnet import SupConResNet
 from utils.util import *
 from loss import SupConLoss
-import torch.backends.cudnn as cudnn
-
+# os.environ['CUDA_VISIBLE_DEVICES'] = '3'
 def parse_option():
     parser = argparse.ArgumentParser('argument for training')
 
     parser.add_argument('--batch_size', type=int, default=256,
                         help='batch_size')
-    parser.add_argument('--epochs', type=int, default=200,
+    parser.add_argument('--epochs', type=int, default=400,
                         help='number of training epochs')
 
     # optimization
@@ -29,7 +28,7 @@ def parse_option():
                         help='momentum')
 
     # model dataset
-    parser.add_argument('--model', type=str, default='resnet18')
+    parser.add_argument('--model', type=str, default='resnet18', choices=['resnet18', 'resnet50'], help='model')
     parser.add_argument('--dataset', type=str, default='cifar10',
                         choices=['cifar10', 'cifar100'], help='dataset')
     parser.add_argument('--size', type=int, default=32, help='parameter for RandomResizedCrop')

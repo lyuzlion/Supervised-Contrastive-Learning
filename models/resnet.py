@@ -207,3 +207,40 @@ class LinearClassifier(nn.Module):
 
     def forward(self, features):
         return self.fc(features)
+    
+
+
+class TransformerClassifier(nn.Module):
+    def __init__(self, name='resnet18', num_classes=10):
+        super(TransformerClassifier, self).__init__()
+        _, feat_dim = model_dict[name]
+        self.encoder_layer = nn.TransformerEncoderLayer(d_model=feat_dim, nhead=8, dim_feedforward=512, batch_first=True)
+        self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=2)
+        self.fc = nn.Linear(feat_dim, 10)
+
+    def forward(self, x):
+        x = x.unsqueeze(1)  # (256, 1, 512), 增加一个batch维度
+        x = self.transformer_encoder(x)
+        x = self.fc(x)
+        x = x.squeeze(1)
+        return x
+
+
+
+class MLPClassifier(nn.Module):
+    """MLP classifier"""
+    def __init__(self, name='resnet18', num_classes=10):
+        super(MLPClassifier, self).__init__()
+        _, feat_dim = model_dict[name]
+        self.out=nn.Sequential(
+            nn.Linear(feat_dim, 512),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(512, 512),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(512, num_classes)
+        )
+
+    def forward(self, features):
+        return self.out(features)
